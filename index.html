@@ -91,15 +91,15 @@
         function displayResults(data) {
             const table = document.getElementById("resultsTable");
             table.innerHTML = "";
-            for (let i = 1; i < data.length; i++) {
-                let row = document.createElement("tr");
-                data[i].forEach(col => {
-                    let cell = document.createElement("td");
-                    cell.textContent = col;
-                    row.appendChild(cell);
+            data.slice(1).forEach(row => {
+                let tr = document.createElement("tr");
+                row.forEach(col => {
+                    let td = document.createElement("td");
+                    td.textContent = col;
+                    tr.appendChild(td);
                 });
-                table.appendChild(row);
-            }
+                table.appendChild(tr);
+            });
         }
 
         function downloadCSV() {
