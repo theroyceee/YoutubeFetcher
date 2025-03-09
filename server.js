@@ -8,10 +8,16 @@ const axios = require("axios");
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
-const API_KEY = "AIzaSyDrm8mSn_6Xe8jcMLD7TfQkNV7608hIanw"; // Replace with your API key
+const API_KEY = "AIzaSyDrm8mSn_6Xe8jcMLD7TfQkNV7608hIanw"; // Replace with a valid YouTube API key
 
 app.use(cors());
 app.use(express.json());
+
+async function getChannelId(url) {
+    const regex = /(?:channel\/|user\/|c\/|@)([a-zA-Z0-9_-]+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+}
 
 async function getChannelStats(channelId) {
     try {
@@ -61,14 +67,19 @@ app.post("/upload-csv", upload.single("csv"), async (req, res) => {
         })
         .on("end", async () => {
             for (const url of channels) {
-                const channelId = url.split("/").pop();
+                const channelId = await getChannelId(url);
+                if (!channelId) {
+                    results.push([url, "Invalid URL", "N/A", "N/A"]);
+                    continue;
+                }
+
                 const subscribers = await getChannelStats(channelId);
                 const videoData = await getLatestVideo(channelId);
                 const views = await getVideoViews(videoData.videoId);
-                
+
                 results.push([url, subscribers, videoData.title, views]);
             }
-            
+
             fs.writeFileSync("updated_channels.csv", results.map(row => row.join(",")).join("\n"));
             res.json({ success: true, data: results });
         });
