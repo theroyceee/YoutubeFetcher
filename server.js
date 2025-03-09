@@ -1,21 +1,19 @@
 const express = require("express");
 const multer = require("multer");
-const csvParser = require("csv-parser");
-const fs = require("fs");
-const axios = require("axios");
 const cors = require("cors");
+const fs = require("fs");
+const csv = require("csv-parser");
+const axios = require("axios");
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
-const API_KEY = "AIzaSyDrm8mSn_6Xe8jcMLD7TfQkNV7608hIanw";
-const PORT = 5000;
+const API_KEY = "AIzaSyDrm8mSn_6Xe8jcMLD7TfQkNV7608hIanw"; // Replace with your API key
 
 app.use(cors());
 app.use(express.json());
 
-// Function to get channel subscriber count
-async function getSubscribers(channelId) {
+async function getChannelStats(channelId) {
     try {
         const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${API_KEY}`;
         const response = await axios.get(url);
@@ -26,28 +24,22 @@ async function getSubscribers(channelId) {
     }
 }
 
-// Function to get latest video details
 async function getLatestVideo(channelId) {
     try {
         const url = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&order=date&maxResults=1&type=video`;
         const response = await axios.get(url);
-        const video = response.data.items[0];
-
-        if (!video) return { title: "No video found", views: "N/A" };
-
-        const videoId = video.id.videoId;
-        const title = video.snippet.title;
-        const views = await getVideoViews(videoId);
-
-        return { title, views };
+        if (response.data.items.length > 0) {
+            const video = response.data.items[0];
+            return { videoId: video.id.videoId, title: video.snippet.title };
+        }
     } catch (error) {
         console.error(`Error fetching video for ${channelId}:`, error.message);
-        return { title: "Error", views: "Error" };
     }
+    return { videoId: null, title: "No Video Found" };
 }
 
-// Function to get video views
 async function getVideoViews(videoId) {
+    if (!videoId) return "N/A";
     try {
         const url = `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&id=${videoId}&part=statistics`;
         const response = await axios.get(url);
@@ -58,36 +50,33 @@ async function getVideoViews(videoId) {
     }
 }
 
-// Upload CSV and process
 app.post("/upload-csv", upload.single("csv"), async (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
-
     const results = [["YouTube URL", "Subscribers", "Latest Video Title", "Views"]];
-    const filePath = req.file.path;
+    const channels = [];
 
-    fs.createReadStream(filePath)
-        .pipe(csvParser())
-        .on("data", async (row) => {
-            const url = Object.values(row)[0];
-            const channelId = url.split("/").pop();
-
-            const subscribers = await getSubscribers(channelId);
-            const latestVideo = await getLatestVideo(channelId);
-
-            results.push([url, subscribers, latestVideo.title, latestVideo.views]);
+    fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on("data", (row) => {
+            channels.push(Object.values(row)[0]);
         })
-        .on("end", () => {
-            fs.unlinkSync(filePath); // Delete file after processing
+        .on("end", async () => {
+            for (const url of channels) {
+                const channelId = url.split("/").pop();
+                const subscribers = await getChannelStats(channelId);
+                const videoData = await getLatestVideo(channelId);
+                const views = await getVideoViews(videoData.videoId);
+                
+                results.push([url, subscribers, videoData.title, views]);
+            }
+            
+            fs.writeFileSync("updated_channels.csv", results.map(row => row.join(",")).join("\n"));
             res.json({ success: true, data: results });
-        })
-        .on("error", (err) => res.status(500).json({ success: false, message: err.message }));
+        });
 });
 
-// Serve updated CSV file
 app.get("/download-csv", (req, res) => {
-    const csvContent = results.map((row) => row.join(",")).join("\n");
-    fs.writeFileSync("updated_channels.csv", csvContent);
     res.download("updated_channels.csv");
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
