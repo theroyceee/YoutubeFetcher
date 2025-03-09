@@ -5,84 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Fetcher</title>
     <style>
+        /* General Styling */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #007bff, #6610f2);
+            color: #fff;
             text-align: center;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
         }
+
+        /* Container */
         #container {
             max-width: 600px;
-            margin: auto;
+            margin: 40px auto;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
+
         h1 {
-            color: #333;
+            font-size: 28px;
+            margin-bottom: 15px;
         }
+
+        /* File Input & Buttons */
         input, button {
             margin: 10px 0;
-            padding: 10px;
+            padding: 12px;
             width: 90%;
             font-size: 16px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
+            border-radius: 8px;
             border: none;
+            outline: none;
+            transition: all 0.3s ease-in-out;
+        }
+
+        input {
+            background: #fff;
+            color: #333;
+            font-weight: bold;
+        }
+
+        button {
+            background: #ff4757;
+            color: white;
+            font-size: 18px;
             cursor: pointer;
+            font-weight: bold;
             transition: 0.3s;
         }
+
         button:hover {
-            background-color: #218838;
+            background: #e84118;
+            transform: scale(1.05);
         }
+
+        /* Status Text */
+        #status {
+            font-size: 16px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* Loader Animation */
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid #ffffff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Table Styling */
         table {
             width: 100%;
             margin-top: 20px;
             border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            overflow: hidden;
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
             text-align: center;
         }
+
         th {
-            background-color: #f2f2f2;
-        }
-        #status {
-            font-size: 16px;
-            margin-top: 15px;
-            color: #007bff;
+            background: rgba(255, 255, 255, 0.3);
             font-weight: bold;
         }
-        .loader {
-            display: none;
-            margin: auto;
-            border: 4px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 4px solid #3498db;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            #container {
+                width: 90%;
+            }
+
+            button {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
 
     <div id="container">
-        <h1>YouTube Video Fetcher</h1>
+        <h1>🎥 YouTube Video Fetcher</h1>
         <input type="file" id="csvFile">
-        <button onclick="uploadCSV()">Upload & Process</button>
-        <button onclick="downloadCSV()">Download CSV</button>
+        <button onclick="uploadCSV()">📤 Upload & Process</button>
+        <button onclick="downloadCSV()">📥 Download CSV</button>
         
         <div class="loader" id="loader"></div>
         <p id="status"></p>
 
-        <h2>Results:</h2>
+        <h2>📊 Results:</h2>
         <table>
             <thead>
                 <tr>
@@ -104,13 +154,13 @@
             const statusText = document.getElementById("status");
 
             if (!fileInput.files.length) {
-                alert("Please select a CSV file!");
+                alert("⚠️ Please select a CSV file!");
                 return;
             }
 
             loader.style.display = "block";
-            statusText.textContent = "Fetching data... Please wait.";
-            statusText.style.color = "#007bff";
+            statusText.textContent = "⏳ Fetching data... Please wait.";
+            statusText.style.color = "#FFD700";
 
             const formData = new FormData();
             formData.append("csv", fileInput.files[0]);
