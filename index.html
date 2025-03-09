@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Fetcher</title>
+    <title>YouTube Data Fetcher</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,7 +74,7 @@
 <body>
 
     <div id="container">
-        <h1>YouTube Video Fetcher</h1>
+        <h1>YouTube Data Fetcher</h1>
         <input type="file" id="csvFile">
         <button onclick="uploadCSV()">Upload & Process</button>
         <button onclick="downloadCSV()">Download CSV</button>
@@ -87,6 +87,7 @@
             <thead>
                 <tr>
                     <th>YouTube URL</th>
+                    <th>Subscribers</th>
                     <th>Latest Video Title</th>
                     <th>Views</th>
                 </tr>
@@ -96,12 +97,13 @@
     </div>
 
     <script>
-        const BACKEND_URL = "https://youtubefetcher-1.onrender.com"; // 🔹 Replace this with your Render backend URL
+        const backendUrl = "https://youtubefetcher-1.onrender.com"; // Replace with your actual Render backend URL
 
         async function uploadCSV() {
             const fileInput = document.getElementById("csvFile");
             const loader = document.getElementById("loader");
             const statusText = document.getElementById("status");
+            const table = document.getElementById("resultsTable");
 
             if (!fileInput.files.length) {
                 alert("Please select a CSV file!");
@@ -110,19 +112,17 @@
 
             loader.style.display = "block";
             statusText.textContent = "Fetching data... Please wait.";
-            statusText.style.color = "#007bff";
 
             const formData = new FormData();
             formData.append("csv", fileInput.files[0]);
 
             try {
-                let response = await fetch(`${BACKEND_URL}/upload-csv`, {
+                let response = await fetch(`${backendUrl}/upload-csv`, {
                     method: "POST",
                     body: formData
                 });
 
                 let data = await response.json();
-                console.log("Server Response:", data);
 
                 if (data.success) {
                     displayResults(data.data);
@@ -143,23 +143,11 @@
 
         function displayResults(data) {
             const table = document.getElementById("resultsTable");
-            table.innerHTML = ""; // Clear previous results
-
-            for (let i = 1; i < data.length; i++) {
-                let row = document.createElement("tr");
-
-                data[i].forEach(col => {
-                    let cell = document.createElement("td");
-                    cell.textContent = col;
-                    row.appendChild(cell);
-                });
-
-                table.appendChild(row);
-            }
+            table.innerHTML = data.slice(1).map(row => `<tr>${row.map(col => `<td>${col}</td>`).join("")}</tr>`).join("");
         }
 
         function downloadCSV() {
-            window.location.href = `${BACKEND_URL}/download-csv`;
+            window.location.href = `${backendUrl}/download-csv`;
         }
     </script>
 
