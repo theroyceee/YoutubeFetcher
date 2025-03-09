@@ -82,36 +82,47 @@
         <div class="loader" id="loader"></div>
         <p id="status"></p>
 
-    
+        <h2>Results:</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>YouTube URL</th>
+                    <th>Latest Video Title</th>
+                    <th>Views</th>
+                </tr>
+            </thead>
+            <tbody id="resultsTable"></tbody>
+        </table>
     </div>
 
     <script>
-        let backendUrl = "https://youtubefetcher.onrender.com";
+        const BACKEND_URL = "https://youtubefetcher.onrender.com"; // 🔹 Replace this with your Render backend URL
+
         async function uploadCSV() {
             const fileInput = document.getElementById("csvFile");
             const loader = document.getElementById("loader");
             const statusText = document.getElementById("status");
-            const table = document.getElementById("resultsTable");
 
             if (!fileInput.files.length) {
                 alert("Please select a CSV file!");
                 return;
             }
 
-            loader.style.display = "block"; // Show loader
+            loader.style.display = "block";
             statusText.textContent = "Fetching data... Please wait.";
+            statusText.style.color = "#007bff";
 
             const formData = new FormData();
             formData.append("csv", fileInput.files[0]);
 
             try {
-                let response = await fetch("http://localhost:5000/upload-csv", {
+                let response = await fetch(`${BACKEND_URL}/upload-csv`, {
                     method: "POST",
                     body: formData
                 });
 
                 let data = await response.json();
-                console.log("Server Response:", data); // Debugging log
+                console.log("Server Response:", data);
 
                 if (data.success) {
                     displayResults(data.data);
@@ -126,7 +137,7 @@
                 statusText.textContent = "❌ Error processing request!";
                 statusText.style.color = "red";
             } finally {
-                loader.style.display = "none"; // Hide loader
+                loader.style.display = "none";
             }
         }
 
@@ -148,10 +159,9 @@
         }
 
         function downloadCSV() {
-            window.location.href = "http://localhost:5000/download-csv";
+            window.location.href = `${BACKEND_URL}/download-csv`;
         }
     </script>
 
 </body>
 </html>
-
